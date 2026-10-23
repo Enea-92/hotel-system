@@ -1,0 +1,9 @@
+[
+  {
+    "AllowedOrigins": ["https://hotelsystem-1.onrender.com"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paneli i stafit</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+:root{
+  --ink:#0B1B33; --sea:#0F2A4D; --sand:#EEF1F6; --sand-dim:#DCE3ED;
+  --aqua-dark:#2C5FA8; --gold:#CE9A42; --coral:#C1592E; --line:rgba(15,42,77,0.16); --white:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{ margin:0; font-family:'Work Sans',sans-serif; background:var(--sand-dim); color:var(--ink); }
+.topbar{ background:var(--sea); color:var(--sand); padding:18px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.topbar h1{ font-family:'Fraunces',serif; font-size:20px; font-weight:500; margin:0; }
+.conn{ font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px; border-radius:5px; background:rgba(243,236,220,0.12); }
+.conn.on{ background:var(--aqua-dark); }
+.staff-lang-btn.on{ background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:600; }
+.config-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.config-row input{ font-family:'IBM Plex Mono',monospace; font-size:11px; border:0.5px solid rgba(243,236,220,0.4); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:5px; padding:5px 8px; width:180px; }
+.config-row button{ font-size:11px; border:none; background:var(--gold); color:var(--ink); border-radius:5px; padding:5px 10px; cursor:pointer; font-weight:500; }
+
+.locked{ text-align:center; padding:80px 20px; }
+.locked input{ font-family:'IBM Plex Mono',monospace; padding:10px 14px; border-radius:8px; border:0.5px solid var(--line); font-size:14px; width:220px; }
+.locked button{ border:none; background:var(--sea); color:var(--sand); border-radius:8px; padding:10px 18px; font-size:13px; font-weight:500; cursor:pointer; margin-left:8px; }
+
+.stats-row{ display:flex; gap:12px; padding:16px 20px 0; max-width:1200px; margin:0 auto; flex-wrap:wrap; }
+.stat-card{ background:var(--white); border:0.5px solid var(--line); border-radius:12px; padding:12px 18px; flex:1; min-width:120px; }
+.stat-num{ font-family:'Fraunces',serif; font-size:22px; font-weight:500; }
+.stat-label{ font-size:11px; opacity:0.55; text-transform:uppercase; letter-spacing:0.04em; }
+
+.board{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; padding:20px; max-width:1400px; margin:0 auto; }
+@media (max-width:1100px){ .board{ grid-template-columns:1fr 1fr; } }
+@media (max-width:640px){ .board{ grid-template-columns:1fr; } }
+.col{ background:var(--white); border:0.5px solid var(--line); border-radius:12px; padding:14px 16px; min-height:200px; }
+.col h2{ font-size:13px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.6; margin:0 0 12px; display:flex; justify-content:space-between; align-items:center; }
+.badge{ background:var(--sand-dim); color:var(--sea); border-radius:10px; padding:1px 8px; font-size:11px; }
+.export-link{ font-size:10.5px; color:var(--aqua-dark); text-decoration:none; cursor:pointer; }
+
+.card{ border:0.5px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+.card-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+.card-room{ font-family:'IBM Plex Mono',monospace; font-weight:500; color:var(--aqua-dark); }
+.card-time{ font-size:10.5px; opacity:0.45; }
+.card-body{ opacity:0.85; line-height:1.5; }
+.card-btns{ display:flex; gap:6px; margin-top:8px; }
+.card-btn{ border:none; background:var(--sea); color:var(--sand); font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer; }
+.card-btn.secondary{ background:var(--sand-dim); color:var(--ink); }
+.empty{ font-size:12.5px; opacity:0.4; padding:10px 0; }
+
+.chat-col{ grid-column:1 / -1; }
+.chat-room-list{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.room-pill{ border:0.5px solid var(--line); background:var(--sand-dim); border-radius:14px; padding:5px 12px; font-size:12px; cursor:pointer; font-family:'IBM Plex Mono',monospace; position:relative; display:inline-flex; align-items:center; gap:6px; }
+.room-pill.on{ background:var(--sea); color:var(--sand); }
+.room-unread-badge{ background:var(--coral); color:#fff; border-radius:999px; font-family:'Inter',sans-serif; font-size:10.5px; font-weight:700; line-height:1; padding:3px 6px; min-width:16px; text-align:center; }
+.chat-thread{ max-height:280px; overflow-y:auto; border:0.5px solid var(--line); border-radius:10px; padding:10px; margin-bottom:10px; }
+.msg{ max-width:70%; margin-bottom:8px; font-size:13px; padding:8px 12px; border-radius:10px; line-height:1.5; }
+.msg.guest{ background:var(--sand-dim); }
+.msg.staff{ background:var(--sea); color:var(--sand); margin-left:auto; }
+.msg.bot{ background:var(--gold); color:var(--ink); margin-left:auto; }
+#escalation-banner{ display:none; background:var(--coral); color:#fff; padding:10px 20px; font-size:13px; max-width:1400px; margin:14px auto 0; border-radius:10px; }
+#escalation-banner button{ margin-left:10px; background:none; border:1px solid #fff; color:#fff; border-radius:5px; cursor:pointer; padding:2px 8px; font-family:inherit; }
+.reply-row{ display:flex; gap:8px; }
+.reply-row input{ flex:1; border:0.5px solid var(--line); border-radius:8px; padding:9px 12px; font-family:inherit; font-size:13px; }
+.reply-row button{ border:none; background:var(--sea); color:var(--sand); border-radius:8px; padding:9px 16px; cursor:pointer; font-size:13px; }
+
+.media-thumb{ position:relative; display:block; width:100%; max-width:200px; margin-top:8px; border-radius:8px; overflow:hidden; cursor:pointer; background:#000; border:0; padding:0; }
+.media-thumb img, .media-thumb video{ width:100%; display:block; max-height:170px; object-fit:cover; pointer-events:none; }
+.media-thumb .play-badge{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; color:#fff; text-shadow:0 1px 8px rgba(0,0,0,0.6); background:rgba(0,0,0,0.18); pointer-events:none; }
+#media-lightbox{ display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.88); align-items:center; justify-content:center; padding:16px; }
+#media-lightbox.open{ display:flex; }
+#media-lightbox img, #media-lightbox video{ max-width:100%; max-height:calc(100vh - 80px); border-radius:8px; background:#000; }
+#media-lightbox-close{ position:absolute; top:14px; right:16px; width:42px; height:42px; border-radius:50%; border:0; background:rgba(255,255,255,0.18); color:#fff; font-size:22px; cursor:pointer; }
+#media-lightbox-open{ position:absolute; bottom:14px; left:50%; transform:translateX(-50%); color:#fff; font-size:12.5px; opacity:0.75; text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1 id="panel-title">Paneli i stafit</h1>
+  <div class="config-row">
+    <span class="conn" id="conn-status">● jo i lidhur</span>
+    <button onclick="toggleSound()" id="sound-btn">🔊 Tinguj: ON</button>
+    <div style="display:flex; gap:3px;">
+      <button class="staff-lang-btn" data-lang="sq" onclick="setStaffLang('sq')" style="font-size:10.5px; border:0.5px solid rgba(243,236,220,0.35); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:4px; padding:4px 7px; cursor:pointer;">SQ</button>
+      <button class="staff-lang-btn" data-lang="en" onclick="setStaffLang('en')" style="font-size:10.5px; border:0.5px solid rgba(243,236,220,0.35); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:4px; padding:4px 7px; cursor:pointer;">EN</button>
+      <button class="staff-lang-btn" data-lang="it" onclick="setStaffLang('it')" style="font-size:10.5px; border:0.5px solid rgba(243,236,220,0.35); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:4px; padding:4px 7px; cursor:pointer;">IT</button>
+      <button class="staff-lang-btn" data-lang="de" onclick="setStaffLang('de')" style="font-size:10.5px; border:0.5px solid rgba(243,236,220,0.35); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:4px; padding:4px 7px; cursor:pointer;">DE</button>
+    </div>
+    <button onclick="logout()" id="logout-btn" style="display:none;">Dil</button>
+  </div>
+</div>
+
+<div id="locked-view">
+  <div class="locked">
+    <p style="margin-bottom:14px; opacity:0.7;">Vendos URL-në e backend-it, slug-un e hotelit, dhe fjalëkalimin e stafit</p>
+    <input id="backend-url" placeholder="https://hotelsystem-lzlm.onrender.com" value="https://hotelsystem-lzlm.onrender.com" style="display:block; margin:0 auto 10px;">
+    <input id="hotel-slug" placeholder="Hoteli (p.sh. bregu)" style="display:block; margin:0 auto 10px;">
+    <input type="password" id="staff-password" placeholder="Fjalëkalimi i stafit">
+    <button onclick="connect()">Lidhu</button>
+  </div>
+</div>
+
+<div id="main-view" style="display:none;">
+  <div id="escalation-banner"></div>
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="board">
+    <div class="col">
+      <h2>Kërkesa të shpejta <span class="badge" id="req-count">0</span></h2>
+      <div id="requests-list"><p class="empty">Asnjë kërkesë pezull.</p></div>
+    </div>
+
+    <div class="col">
+      <h2>Probleme teknike <span class="badge" id="issue-count">0</span></h2>
+      <div id="issues-list"><p class="empty">Asnjë problem i raportuar.</p></div>
+    </div>
+
+    <div class="col">
+      <h2>
+        <span>Porosi room-service <span class="badge" id="order-count">0</span></span>
+        <a class="export-link" onclick="exportCsv('orders')">Eksporto CSV</a>
+      </h2>
+      <div id="orders-list"><p class="empty">Asnjë porosi pezull.</p></div>
+    </div>
+
+    <div class="col">
+      <h2>
+        <span>Vlerësime të fundit</span>
+        <a class="export-link" onclick="exportCsv('feedback')">Eksporto CSV</a>
+      </h2>
+      <div id="feedback-list"><p class="empty">Ende pa vlerësime.</p></div>
+    </div>
+
+    <div class="col chat-col">
+      <h2>Chat me dhomat</h2>
+      <div class="chat-room-list" id="room-list"></div>
+      <div class="chat-thread" id="chat-thread"><p class="empty">Zgjidhni një dhomë për të parë bisedën.</p></div>
+      <div class="reply-row">
+        <input id="reply-input" placeholder="Përgjigju mysafirit..." onkeydown="if(event.key==='Enter')sendReply()">
+        <button id="reply-send-btn" onclick="sendReply()">Dërgo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+let socket = null;
+let apiBase = 'https://hotelsystem-lzlm.onrender.com';
+let staffPassword = '';
+let currentHotel = '';
+let hotelDisplayName = '';
+let activeRoom = null;
+let knownRooms = new Set();
+// How many new guest messages have arrived per room since staff last opened
+// that room's chat — shown as a small badge on the room pill, like an
+// unread-message count in Instagram/Messenger. Resets to 0 on openRoom().
+let unreadCounts = {};
+let allMessages = [];
+let soundOn = true;
+let staffLang = localStorage.getItem('bregu_staff_lang') || 'sq';
+
+function authHeaders(){
+  return { 'Content-Type': 'application/json', 'x-staff-password': staffPassword };
+}
+
+function setStaffLang(lang){
+  staffLang = lang;
+  try{ localStorage.setItem('bregu_staff_lang', lang); }catch(e){}
+  document.querySelectorAll('.staff-lang-btn').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  loadRequests();
+  if(activeRoom) renderThread();
+}
+
+// Translates text into staffLang using Google Translate's free web endpoint
+// (no API key — the same one translate.google.com's page itself calls), with
+// an in-memory cache so the same phrase is never translated twice. Quality
+// is much better than MyMemory for short/common phrases, but since this is
+// an unofficial endpoint (not a paid, guaranteed API), MyMemory is kept as
+// a fallback in case Google's endpoint is ever unreachable or blocked.
+const translateCache = new Map();
+async function translateForStaff(text, fromLang){
+  if(!text || !fromLang || fromLang === staffLang) return text;
+  const key = fromLang + '|' + staffLang + '|' + text;
+  if(translateCache.has(key)) return translateCache.get(key);
+  try{
+    // Translated by the backend (Google Cloud Translation when configured);
+    // on failure the original text is returned, never an error sentence.
+    const res = await fetch(apiUrl('/api/translate'), {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ hotel: currentHotel, text, from: fromLang, to: staffLang })
+    });
+    if(!res.ok) return text;
+    const data = await res.json();
+    if(!data || !data.translated || !data.translation) return text;
+    translateCache.set(key, data.translation);
+    return data.translation;
+  }catch(e){
+    return text;
+  }
+}
+
+function apiUrl(path){
+  const sep = path.includes('?') ? '&' : '?';
+  return apiBase + path + sep + 'hotel=' + encodeURIComponent(currentHotel);
+}
+
+// Staff alert sound: plays notification.mp3 (the "cute twinkle" chime, which
+// must sit next to this page on the static host). If the file can't load or
+// the browser blocks autoplay, falls back to a short synthesized two-note chime
+// so staff are never left without any sound. Overdue-response escalations
+// (urgent=true) play the sound twice so they stand out.
+const notificationAudio = new Audio('notification.mp3');
+notificationAudio.preload = 'auto';
+notificationAudio.volume = 0.8;
+
+function playSynthChime(urgent){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    function tone(freq, startOffset, duration, peakGain){
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(ctx.destination);
+      const t0 = now + startOffset;
+      const t1 = t0 + duration;
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(peakGain, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t1);
+      osc.start(t0);
+      osc.stop(t1 + 0.02);
+    }
+    const notes = urgent ? [659, 784, 988] : [784, 988];
+    notes.forEach((f, i) => tone(f, i * 0.28, 0.6, 0.18));
+    setTimeout(()=>ctx.close(), 2000);
+  }catch(e){}
+}
+
+function playBeep(urgent){
+  if(!soundOn) return;
+  try{
+    const a = notificationAudio;
+    a.currentTime = 0;
+    const p = a.play();
+    if(p && typeof p.catch === 'function') p.catch(() => playSynthChime(urgent));
+    if(urgent){
+      setTimeout(() => { try{ a.currentTime = 0; a.play().catch(()=>{}); }catch(e){} }, 1900);
+    }
+  }catch(e){
+    playSynthChime(urgent);
+  }
+}
+
+// Browser notification — shows a system-level popup even while this tab is
+// open and focused, not just when the page is in the background.
+let notificationsReady = false;
+
+function ensureNotificationPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    Notification.requestPermission().then(p => { notificationsReady = (p === 'granted'); });
+  } else {
+    notificationsReady = (Notification.permission === 'granted');
+  }
+}
+
+function showBrowserNotification(title, body){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  try{
+    new Notification(title, { body, icon: 'icon-192.png', tag: 'bregu-' + Date.now() });
+  }catch(e){}
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  document.getElementById('sound-btn').textContent = soundOn ? '🔊 Tinguj: ON' : '🔇 Tinguj: OFF';
+}
+
+async function connect(){
+  apiBase = document.getElementById('backend-url').value.trim().replace(/\/$/, '');
+  currentHotel = document.getElementById('hotel-slug').value.trim().toLowerCase();
+  staffPassword = document.getElementById('staff-password').value;
+  ensureNotificationPermission();
+
+  if(!currentHotel){
+    document.getElementById('conn-status').textContent = '● vendos hotelin';
+    return;
+  }
+
+  try{
+    const testRes = await fetch(apiUrl('/api/quick-requests'), { headers: authHeaders() });
+    if(testRes.status === 401) throw new Error('unauthorized');
+    if(!testRes.ok) throw new Error('bad response');
+  }catch(e){
+    document.getElementById('conn-status').textContent = '● fjalëkalim/URL i gabuar';
+    return;
+  }
+
+  try{
+    localStorage.setItem('bregu_staff_session', JSON.stringify({ apiBase, hotel: currentHotel, password: staffPassword }));
+  }catch(e){}
+
+  try{
+    const infoRes = await fetch(apiUrl('/api/hotel-info'));
+    const info = await infoRes.json();
+    hotelDisplayName = info?.name || currentHotel;
+  }catch(e){ hotelDisplayName = currentHotel; }
+  document.getElementById('panel-title').textContent = hotelDisplayName + ' — Paneli i stafit';
+  updateTitleBadge();
+
+  document.getElementById('locked-view').style.display = 'none';
+  document.getElementById('main-view').style.display = 'block';
+
+  if(socket) socket.disconnect();
+  socket = io(apiBase, { transports: ['websocket', 'polling'] });
+
+  socket.on('connect', () => {
+    document.getElementById('conn-status').textContent = '● i lidhur';
+    document.getElementById('conn-status').classList.add('on');
+    document.getElementById('logout-btn').style.display = 'inline-block';
+    // The staff channel carries every guest message in the hotel, so the
+    // server wants the staff password to join it.
+    socket.emit('join_staff', { hotel: currentHotel, password: staffPassword });
+    loadAll();
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('conn-status').textContent = '● shkëputur';
+    document.getElementById('conn-status').classList.remove('on');
+  });
+  socket.on('new_request', (item) => {
+    loadRequests(); loadStats(); playBeep();
+    const title = item.category === 'issue' ? '🔧 Problem teknik — Dhoma ' + item.room_number : 'Kërkesë e re — Dhoma ' + item.room_number;
+    showBrowserNotification(title, item.request_type);
+  });
+  socket.on('request_updated', () => loadRequests());
+  socket.on('new_order', (order) => {
+    loadOrders(); loadStats(); playBeep();
+    showBrowserNotification('Porosi e re — Dhoma ' + order.room_number, order.items.map(i=>i.name).join(', '));
+  });
+  socket.on('order_updated', () => loadOrders());
+  socket.on('chat_cleared', () => {
+    allMessages = [];
+    knownRooms = new Set();
+    unreadCounts = {};
+    activeRoom = null;
+    renderRoomList();
+    document.getElementById('chat-thread').innerHTML = '<p class="empty">Zgjidhni një dhomë për të parë bisedën.</p>';
+  });
+  socket.on('new_message', (msg) => {
+    knownRooms.add(msg.room_number);
+    if(msg.sender === 'guest' && msg.room_number !== activeRoom){
+      unreadCounts[msg.room_number] = (unreadCounts[msg.room_number] || 0) + 1;
+    }
+    renderRoomList();
+    if(msg.room_number === activeRoom){
+      allMessages.push(msg);
+      renderThread();
+    }
+    if(msg.sender === 'guest'){
+      playBeep();
+      showBrowserNotification('Mesazh i ri — Dhoma ' + msg.room_number, msg.text);
+    }
+  });
+  socket.on('escalation_alert', (payload) => {
+    escalations.push(payload);
+    renderEscalationBanner();
+    playBeep(true);
+    const typeLabel = { message:'mesazh', request:'kërkesë', issue:'problem', order:'porosi' }[payload.type] || payload.type;
+    showBrowserNotification('⏰ Vonesë (' + typeLabel + ') — Dhoma ' + payload.room_number, payload.text);
+  });
+}
+
+// Items unanswered past ESCALATION_MINUTES (server-side) land here so the
+// staff can't miss a quiet, aging request — a visible banner on top of the
+// usual sound + browser notification.
+let escalations = [];
+function renderEscalationBanner(){
+  const box = document.getElementById('escalation-banner');
+  if(!box) return;
+  if(escalations.length === 0){ box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const typeLabel = { message:'mesazh', request:'kërkesë', issue:'problem', order:'porosi' };
+  box.innerHTML = `⏰ <strong>${escalations.length}</strong> artikuj pa përgjigje: ` +
+    escalations.slice(-4).map(e => `Dhoma ${e.room_number} (${typeLabel[e.type] || e.type})`).join(', ') +
+    `<button onclick="clearEscalations()">Mbyll</button>`;
+}
+function clearEscalations(){ escalations = []; renderEscalationBanner(); }
+
+async function loadAll(){
+  loadRequests();
+  loadOrders();
+  loadFeedback();
+  loadStats();
+  const res = await fetch(apiUrl('/api/messages'), { headers: authHeaders() });
+  const msgs = await res.json();
+  msgs.forEach(m => knownRooms.add(m.room_number));
+  renderRoomList();
+}
+
+async function loadStats(){
+  try{
+    const res = await fetch(apiUrl('/api/stats'), { headers: authHeaders() });
+    const s = await res.json();
+    const box = document.getElementById('stats-row');
+    box.innerHTML = `
+      <div class="stat-card"><div class="stat-num">${s.requests_today}</div><div class="stat-label">Kërkesa sot</div></div>
+      <div class="stat-card"><div class="stat-num">${s.orders_today}</div><div class="stat-label">Porosi sot</div></div>
+      <div class="stat-card"><div class="stat-num">${s.avg_rating ?? '—'}</div><div class="stat-label">Vlerësim mesatar</div></div>
+      <div class="stat-card"><div class="stat-num">${s.busiest_hour !== null ? s.busiest_hour+':00' : '—'}</div><div class="stat-label">Ora më e ngarkuar</div></div>
+    `;
+  }catch(e){}
+}
+
+async function loadRequests(){
+  const res = await fetch(apiUrl('/api/quick-requests'), { headers: authHeaders() });
+  const items = await res.json();
+  const requests = items.filter(r => r.category !== 'issue');
+  const issues = items.filter(r => r.category === 'issue');
+
+  document.getElementById('req-count').textContent = requests.length;
+  updateTitleBadge();
+  const box = document.getElementById('requests-list');
+  box.innerHTML = requests.length === 0 ? '<p class="empty">Asnjë kërkesë pezull.</p>' : requests.map(r => `
+    <div class="card">
+      <div class="card-top"><span class="card-room">Dhoma ${r.room_number}</span><span class="card-time">${r.created_at}</span></div>
+      <div class="card-body" id="req-text-${r.id}">${r.request_type}</div>
+      <div class="card-btns"><button class="card-btn" onclick="markRequestDone('${r.id}')">Shëno si kryer</button></div>
+    </div>`).join('');
+
+  document.getElementById('issue-count').textContent = issues.length;
+  const issueBox = document.getElementById('issues-list');
+  issueBox.innerHTML = issues.length === 0 ? '<p class="empty">Asnjë problem i raportuar.</p>' : issues.map(r => `
+    <div class="card" style="border-color:rgba(193,89,46,0.35);">
+      <div class="card-top"><span class="card-room">Dhoma ${r.room_number}</span><span class="card-time">${r.created_at}</span></div>
+      <div class="card-body" id="req-text-${r.id}">🔧 ${r.request_type}</div>
+      ${mediaThumbHtml(r)}
+      <div class="card-btns"><button class="card-btn" onclick="markRequestDone('${r.id}')">Shëno si zgjidhur</button></div>
+    </div>`).join('');
+
+  // Nothing is translated automatically. For anything written in a different
+  // language than staffLang, a small "Përkthe" link is added under the card's
+  // text; clicking it translates that one request (and flips back again).
+  [...requests, ...issues].forEach((r) => {
+    if(!r.lang || r.lang === staffLang) return;
+    requestById[r.id] = r;
+    const el = document.getElementById('req-text-' + r.id);
+    if(!el || el.parentElement.querySelector('.req-translate')) return;
+    const link = document.createElement('span');
+    link.className = 'req-translate';
+    link.id = 'req-translate-' + r.id;
+    link.style.cssText = 'display:block; margin-top:3px; font-size:10.5px; opacity:0.7; text-decoration:underline; cursor:pointer;';
+    link.textContent = `Përkthe (${r.lang.toUpperCase()})`;
+    link.onclick = () => translateRequest(r.id);
+    el.insertAdjacentElement('afterend', link);
+  });
+}
+
+const requestById = {};
+async function translateRequest(id){
+  const r = requestById[id];
+  const el = document.getElementById('req-text-' + id);
+  const link = document.getElementById('req-translate-' + id);
+  if(!r || !el || !link) return;
+  const prefix = r.category === 'issue' ? '🔧 ' : '';
+  const langLabel = r.lang.toUpperCase();
+  if(link.dataset.showing === 'translated'){
+    el.innerHTML = prefix + escapeHtmlStaff(r.request_type);
+    link.textContent = `Përkthe (${langLabel})`;
+    link.dataset.showing = 'original';
+    return;
+  }
+  if(!link.dataset.translated){
+    link.textContent = 'Duke përkthyer…';
+    link.style.pointerEvents = 'none';
+    let translated = '';
+    try{ translated = await translateForStaff(r.request_type, r.lang); }catch(e){}
+    link.style.pointerEvents = '';
+    if(!translated || translated === r.request_type){
+      link.textContent = 'Përkthimi dështoi — provo përsëri';
+      return;
+    }
+    link.dataset.translated = translated;
+  }
+  el.innerHTML = prefix + escapeHtmlStaff(link.dataset.translated);
+  link.textContent = `Shfaq origjinalin (${langLabel})`;
+  link.dataset.showing = 'translated';
+}
+
+// Keeps the pending workload visible even when the staff member has switched
+// to another browser tab — e.g. "(5) Bregu — Paneli i stafit".
+function updateTitleBadge(){
+  const req = parseInt(document.getElementById('req-count')?.textContent || '0', 10);
+  const issue = parseInt(document.getElementById('issue-count')?.textContent || '0', 10);
+  const order = parseInt(document.getElementById('order-count')?.textContent || '0', 10);
+  const total = req + issue + order;
+  document.title = (total > 0 ? '(' + total + ') ' : '') + (hotelDisplayName || 'Bregu') + ' — Paneli i stafit';
+}
+
+
+// ---------- photo / video viewer: opens inside the page, not in a new tab ----------
+function mediaThumbHtml(r){
+  const url = r.media_url || r.image || '';
+  if(!url) return '';
+  const isVideo = r.media_url && r.media_type === 'video';
+  const safe = escapeHtmlStaff(url);
+  if(isVideo){
+    return `<button type="button" class="media-thumb" data-media-url="${safe}" data-media-type="video" aria-label="Hap videon"><video preload="metadata" muted playsinline src="${safe}#t=0.1"></video><span class="play-badge">▶</span></button>`;
+  }
+  return `<button type="button" class="media-thumb" data-media-url="${safe}" data-media-type="photo" aria-label="Hap foton"><img src="${safe}" alt="Foto e problemit"></button>`;
+}
+
+function openMediaLightbox(url, type){
+  const box = document.getElementById('media-lightbox');
+  const body = document.getElementById('media-lightbox-body');
+  body.innerHTML = '';
+  const el = document.createElement(type === 'video' ? 'video' : 'img');
+  if(type === 'video'){ el.controls = true; el.autoplay = true; el.playsInline = true; }
+  el.src = url;
+  body.appendChild(el);
+  const link = document.getElementById('media-lightbox-open');
+  link.href = url;
+  box.classList.add('open');
+}
+function closeMediaLightbox(){
+  const box = document.getElementById('media-lightbox');
+  const body = document.getElementById('media-lightbox-body');
+  const v = body.querySelector('video'); if(v){ v.pause(); }
+  body.innerHTML = '';
+  box.classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  const thumb = e.target.closest && e.target.closest('.media-thumb');
+  if(thumb){ e.preventDefault(); openMediaLightbox(thumb.dataset.mediaUrl, thumb.dataset.mediaType); return; }
+  const box = document.getElementById('media-lightbox');
+  if(box && box.classList.contains('open') && (e.target === box || e.target.id === 'media-lightbox-body')) closeMediaLightbox();
+});
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeMediaLightbox(); });
+
+function escapeHtmlStaff(str){
+  return (str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function markRequestDone(id){
+  await fetch(apiUrl('/api/quick-requests/' + id), { method:'PATCH', headers: authHeaders(), body: JSON.stringify({status:'done'}) });
+  loadRequests();
+}
+
+const ORDER_STATUS_LABELS = { pending: 'Pranuar', preparing: 'Në përgatitje', on_the_way: 'Në rrugë', delivered: 'Dorëzuar' };
+
+async function loadOrders(){
+  const res = await fetch(apiUrl('/api/room-service'), { headers: authHeaders() });
+  const orders = await res.json();
+  document.getElementById('order-count').textContent = orders.length;
+  updateTitleBadge();
+  const box = document.getElementById('orders-list');
+  box.innerHTML = orders.length === 0 ? '<p class="empty">Asnjë porosi pezull.</p>' : orders.map(o => `
+    <div class="card">
+      <div class="card-top"><span class="card-room">Dhoma ${o.room_number}</span><span class="card-time">${o.total} L</span></div>
+      <div class="card-body">${o.items.map(i=>i.name).join(', ')} <span class="badge">${ORDER_STATUS_LABELS[o.status] || o.status}</span></div>
+      <div class="card-btns">
+        ${o.status === 'pending' ? `<button class="card-btn secondary" onclick="updateOrderStatus('${o.id}','preparing')">Po përgatitet</button>` : ''}
+        ${o.status === 'preparing' ? `<button class="card-btn secondary" onclick="updateOrderStatus('${o.id}','on_the_way')">Në rrugë</button>` : ''}
+        <button class="card-btn" onclick="updateOrderStatus('${o.id}','delivered')">Shëno si dorëzuar</button>
+      </div>
+    </div>`).join('');
+}
+
+async function updateOrderStatus(id, status){
+  await fetch(apiUrl('/api/room-service/' + id), { method:'PATCH', headers: authHeaders(), body: JSON.stringify({status}) });
+  loadOrders();
+}
+
+async function loadFeedback(){
+  const res = await fetch(apiUrl('/api/feedback'), { headers: authHeaders() });
+  const items = await res.json();
+  const box = document.getElementById('feedback-list');
+  box.innerHTML = items.length === 0 ? '<p class="empty">Ende pa vlerësime.</p>' : items.slice(0,10).map(f => `
+    <div class="card">
+      <div class="card-top"><span class="card-room">Dhoma ${f.room_number}</span><span class="card-time">${'★'.repeat(f.rating)}</span></div>
+      <div class="card-body">${f.comment || ''}</div>
+    </div>`).join('');
+}
+
+async function exportCsv(type){
+  try{
+    const res = await fetch(apiUrl('/api/export/' + type + '.csv'), { headers: authHeaders() });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = type + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('Eksportimi dështoi.'); }
+}
+
+function renderRoomList(){
+  const box = document.getElementById('room-list');
+  box.innerHTML = [...knownRooms].sort().map(r => {
+    const unread = unreadCounts[r] || 0;
+    const badge = unread > 0 ? `<span class="room-unread-badge">${unread > 9 ? '9+' : unread}</span>` : '';
+    return `<button class="room-pill ${r===activeRoom?'on':''}" onclick="openRoom('${r}')">Dhoma ${r}${badge}</button>`;
+  }).join('');
+}
+
+async function openRoom(room){
+  activeRoom = room;
+  unreadCounts[room] = 0;
+  renderRoomList();
+  socket.emit('join_room', { hotel: currentHotel, room, password: staffPassword });
+  const box = document.getElementById('chat-thread');
+  try{
+    const res = await fetch(apiUrl('/api/messages/' + encodeURIComponent(room)), { headers: authHeaders() });
+    const data = await res.json().catch(() => null);
+    if(!res.ok || !Array.isArray(data)){
+      // Show the real reason (e.g. "too many requests") instead of leaving the
+      // pane empty and silent.
+      const reason = (data && data.error) ? data.error : ('gabim ' + res.status);
+      allMessages = [];
+      box.innerHTML = '<p class="empty">Nuk u ngarkua biseda: ' + escapeHtmlStaff(reason) + '</p>';
+      return;
+    }
+    allMessages = data;
+    if(!allMessages.length){
+      box.innerHTML = '<p class="empty">Nuk ka mesazhe në këtë dhomë ende.</p>';
+      return;
+    }
+    renderThread();
+  }catch(e){
+    box.innerHTML = '<p class="empty">Nuk u ngarkua biseda — kontrollo lidhjen e internetit.</p>';
+  }
+}
+
+function renderThread(){
+  const box = document.getElementById('chat-thread');
+  // Nothing is translated automatically: guest messages show exactly as the
+  // guest wrote them. When a message is in a different language than the
+  // staff member's, a small "Përkthe" link appears under it; clicking it
+  // translates just that message (and can flip back to the original).
+  box.innerHTML = allMessages.map((m, idx) => {
+    const prefix = m.sender === 'bot' ? '🤖 <em>Automatik:</em> ' : '';
+    const canTranslate = (m.sender === 'guest' || m.sender === 'bot') && m.lang && m.lang !== staffLang;
+    const link = canTranslate
+      ? `<span class="msg-toggle" id="msg-toggle-${idx}" style="display:block; margin-top:3px; font-size:10.5px; opacity:0.7; text-decoration:underline; cursor:pointer;" onclick="translateMsg(${idx})">Përkthe (${escapeHtmlStaff(m.lang.toUpperCase())})</span>`
+      : '';
+    return `<div class="msg ${m.sender}" id="msg-${idx}" data-prefix="${prefix.replace(/"/g, '&quot;')}"><span id="msg-text-${idx}">${prefix}${escapeHtmlStaff(m.text)}</span>${link}</div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+// Translates one guest message on demand, and toggles back to the original.
+async function translateMsg(idx){
+  const m = allMessages[idx];
+  const el = document.getElementById('msg-' + idx);
+  const textEl = document.getElementById('msg-text-' + idx);
+  const toggle = document.getElementById('msg-toggle-' + idx);
+  if(!m || !el || !textEl || !toggle) return;
+  const prefix = el.dataset.prefix || '';
+  const langLabel = (m.lang || '').toUpperCase();
+
+  if(el.dataset.showing === 'translated'){
+    textEl.innerHTML = prefix + escapeHtmlStaff(m.text);
+    toggle.textContent = `Përkthe (${langLabel})`;
+    el.dataset.showing = 'original';
+    return;
+  }
+
+  if(!el.dataset.translated){
+    toggle.textContent = 'Duke përkthyer…';
+    toggle.style.pointerEvents = 'none';
+    let translated = '';
+    try{ translated = await translateForStaff(m.text, m.lang); }catch(e){}
+    toggle.style.pointerEvents = '';
+    if(!translated || translated === m.text){
+      toggle.textContent = 'Përkthimi dështoi — provo përsëri';
+      return;
+    }
+    el.dataset.translated = translated;
+  }
+  textEl.innerHTML = prefix + escapeHtmlStaff(el.dataset.translated);
+  toggle.textContent = `Shfaq origjinalin (${langLabel})`;
+  el.dataset.showing = 'translated';
+}
+
+async function sendReply(){
+  const input = document.getElementById('reply-input');
+  const text = input.value.trim();
+  if(!text || !activeRoom) return;
+  const sendBtn = document.getElementById('reply-send-btn');
+  if(sendBtn) sendBtn.disabled = true;
+  try{
+    const res = await fetch(apiUrl('/api/messages'), { method:'POST', headers: authHeaders(), body: JSON.stringify({room_number: activeRoom, sender:'staff', text, lang: staffLang}) });
+    if(!res.ok){
+      // Previously a failed send (wrong/expired staff password, hotel param
+      // missing, server briefly down, rate limit, etc.) cleared the input
+      // and looked exactly like a successful send — staff had no way to
+      // know the guest never got it. Now it's reported, and the typed text
+      // is kept in the box so nothing is lost and they can just retry.
+      let errMsg = 'gabim ' + res.status;
+      try{ const err = await res.json(); if(err?.error) errMsg = err.error; }catch(e){}
+      alert('Mesazhi NUK u dërgua: ' + errMsg + '. Provo përsëri.');
+      return;
+    }
+    input.value = '';
+  }catch(e){
+    alert('Mesazhi NUK u dërgua — kontrollo lidhjen e internetit dhe provo përsëri.');
+  }finally{
+    if(sendBtn) sendBtn.disabled = false;
+  }
+}
+
+function logout(){
+  try{ localStorage.removeItem('bregu_staff_session'); }catch(e){}
+  if(socket) socket.disconnect();
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('main-view').style.display = 'none';
+  document.getElementById('locked-view').style.display = 'block';
+  document.getElementById('conn-status').textContent = '● jo i lidhur';
+  document.getElementById('conn-status').classList.remove('on');
+  hotelDisplayName = '';
+  document.getElementById('panel-title').textContent = 'Paneli i stafit';
+  document.title = 'Paneli i stafit';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.staff-lang-btn').forEach(b => b.classList.toggle('on', b.dataset.lang === staffLang));
+  try{
+    const saved = JSON.parse(localStorage.getItem('bregu_staff_session') || 'null');
+    if(saved && saved.apiBase && saved.hotel && saved.password){
+      document.getElementById('backend-url').value = saved.apiBase;
+      document.getElementById('hotel-slug').value = saved.hotel;
+      document.getElementById('staff-password').value = saved.password;
+      connect();
+    }
+  }catch(e){}
+});
+</script>
+<div id="media-lightbox" role="dialog" aria-modal="true">
+  <button id="media-lightbox-close" type="button" onclick="closeMediaLightbox()" aria-label="Mbyll">✕</button>
+  <div id="media-lightbox-body" style="display:flex; align-items:center; justify-content:center; max-width:100%;"></div>
+  <a id="media-lightbox-open" href="#" target="_blank" rel="noopener">Hap në skedë të re</a>
+</div>
+</body>
+</html>

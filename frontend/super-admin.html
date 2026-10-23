@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin — Platforma e Hoteleve</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+:root{
+  --ink:#0B1B33; --sea:#0F2A4D; --sand:#EEF1F6; --sand-dim:#DCE3ED;
+  --aqua-dark:#2C5FA8; --gold:#CE9A42; --coral:#C1592E; --line:rgba(15,42,77,0.16); --white:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{ margin:0; font-family:'Work Sans',sans-serif; background:var(--sand-dim); color:var(--ink); }
+.topbar{ background:var(--sea); color:var(--sand); padding:18px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.topbar h1{ font-family:'Fraunces',serif; font-size:20px; font-weight:500; margin:0; }
+.config-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.config-row input{ font-family:'IBM Plex Mono',monospace; font-size:11px; border:0.5px solid rgba(243,236,220,0.4); background:rgba(243,236,220,0.08); color:var(--sand); border-radius:5px; padding:5px 8px; }
+.status{ font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 10px; border-radius:5px; background:rgba(243,236,220,0.12); }
+.status.ok{ background:var(--aqua-dark); }
+
+.wrap{ max-width:800px; margin:0 auto; padding:20px; }
+.card{ background:var(--white); border:0.5px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:18px; }
+.card h2{ font-family:'Fraunces',serif; font-size:17px; font-weight:500; margin:0 0 4px; }
+.card p.hint{ font-size:12px; opacity:0.55; margin:0 0 14px; }
+.field-row{ display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:center; margin-bottom:10px; }
+.field-row label{ font-size:12.5px; font-weight:500; }
+.field-row input{ border:0.5px solid var(--line); border-radius:7px; padding:8px 10px; font-family:inherit; font-size:13px; width:100%; }
+.save-btn{ border:none; background:var(--sea); color:var(--sand); border-radius:8px; padding:9px 18px; font-size:13px; font-weight:500; cursor:pointer; margin-top:6px; }
+.locked{ text-align:center; padding:80px 20px; }
+.locked input{ font-family:'IBM Plex Mono',monospace; padding:10px 14px; border-radius:8px; border:0.5px solid var(--line); font-size:14px; width:240px; }
+.locked button{ border:none; background:var(--sea); color:var(--sand); border-radius:8px; padding:10px 18px; font-size:13px; font-weight:500; cursor:pointer; margin-left:8px; }
+.hotel-row{ border:0.5px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.hotel-name{ font-weight:500; font-size:14px; }
+.hotel-slug{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; opacity:0.6; }
+.hotel-urls{ font-size:11px; opacity:0.5; margin-top:4px; }
+.del-link{ color:var(--coral); font-size:12px; cursor:pointer; background:none; border:none; font-family:inherit; }
+.theme-swatches{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+.theme-swatch{ border:2px solid transparent; border-radius:10px; padding:4px; cursor:pointer; text-align:center; background:none; font-family:inherit; }
+.theme-swatch.on{ border-color:var(--aqua-dark); }
+.theme-swatch .dots{ display:flex; border-radius:6px; overflow:hidden; width:54px; height:28px; }
+.theme-swatch .dots span{ flex:1; }
+.theme-swatch small{ display:block; font-size:10.5px; margin-top:3px; opacity:0.7; }
+.stats-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.stats-table th, .stats-table td{ text-align:left; padding:7px 8px; border-bottom:0.5px solid var(--line); }
+.stats-table th{ font-weight:600; opacity:0.6; font-size:11px; text-transform:uppercase; letter-spacing:0.03em; }
+.stats-table td.num{ font-family:'IBM Plex Mono',monospace; }
+.stats-table .overdue{ color:var(--coral); font-weight:600; }
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:var(--sand); font-size:13px; padding:10px 20px;
+  border-radius:20px; opacity:0; pointer-events:none; transition:opacity 0.25s; z-index:99;
+}
+.toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Super Admin — Platforma e Hoteleve</h1>
+  <div class="config-row">
+    <span class="status" id="conn-status">● jo i lidhur</span>
+  </div>
+</div>
+
+<div class="wrap" id="locked-view">
+  <div class="locked">
+    <p style="margin-bottom:14px; opacity:0.7;">Vendos URL-në e backend-it dhe fjalëkalimin super-admin</p>
+    <input id="backend-url" placeholder="https://hotelsystem-lzlm.onrender.com" value="https://hotelsystem-lzlm.onrender.com" style="display:block; margin:0 auto 10px;">
+    <input type="password" id="super-password" placeholder="Fjalëkalimi super-admin" style="display:block; margin:0 auto 10px;">
+    <button onclick="unlock()">Hyr</button>
+  </div>
+</div>
+
+<div class="wrap" id="main-view" style="display:none;">
+
+  <div class="card">
+    <h2>Krijo hotel të ri</h2>
+    <p class="hint">Çdo hotel merr URL-në e vet: e njëjta faqe app-i, thjesht me ?hotel=slug në fund.</p>
+    <div class="field-row"><label>Slug (URL)</label><input id="new-slug" placeholder="p.sh. bregu, seaview, kaltra"></div>
+    <div class="field-row"><label>Emri i hotelit</label><input id="new-name" placeholder="p.sh. Hotel Bregu"></div>
+    <div class="field-row"><label>Fjalëkalim admin</label><input id="new-admin-pass" placeholder="Min. 8 karaktere"></div>
+    <div class="field-row"><label>Fjalëkalim stafi</label><input id="new-staff-pass" placeholder="Min. 8 karaktere"></div>
+    <div class="field-row"><label>Ngjyrat e website-it</label>
+      <div class="theme-swatches" id="new-theme-swatches"></div>
+    </div>
+    <button class="save-btn" onclick="createHotel()">Krijo hotelin</button>
+  </div>
+
+  <div class="card">
+    <h2>Hotelet ekzistuese</h2>
+    <div id="hotels-list"><p style="opacity:0.5; font-size:13px;">Duke ngarkuar...</p></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <h2 style="margin:0;">Statistika krahasuese</h2>
+      <button type="button" class="del-link" style="color:#2C5FA8;" onclick="exportStatsCsv()">⬇ Eksporto CSV</button>
+    </div>
+    <p class="hint">Cilat hotele kanë më shumë probleme/kërkesa, si vlerësohen, dhe sa artikuj janë ende pa u trajtuar (vonesë mbi 15 min).</p>
+    <div id="stats-table-box"><p style="opacity:0.5; font-size:13px;">Duke ngarkuar...</p></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let apiBase = 'https://hotelsystem-lzlm.onrender.com';
+let superPassword = '';
+
+// Color presets a hotel can pick for its guest app — must match THEME_PRESETS
+// in hotel-system.html. Only the preview dots live here.
+const THEME_CHOICES = [
+  { key:'teal',     label:'Bregu (teal)',  dots:['#0E3A3D','#2C9D93','#CE9A42'] },
+  { key:'ocean',    label:'Oqean (blu)',   dots:['#0D3B66','#3B82C4','#E0A458'] },
+  { key:'sunset',   label:'Perëndim',      dots:['#7A3B2E','#D97B4F','#EFC88B'] },
+  { key:'forest',   label:'Pyll (gjelbër)', dots:['#1F3D2B','#4C8B5A','#C9A14A'] },
+  { key:'royal',    label:'Mbretëror',     dots:['#3B2A5E','#8A5FB3','#D9A441'] },
+  { key:'rose',     label:'Trëndafili',    dots:['#7D2E52','#D97BA0','#E3A857'] },
+  { key:'slate',    label:'Gri-blu',       dots:['#2E3F4F','#5C8AA6','#C9A24A'] },
+  { key:'olive',    label:'Ulliri',        dots:['#4A4A2E','#8A9B4E','#C9A33F'] },
+  { key:'amber',    label:'Qelibar',       dots:['#8A5A1E','#E0A53D','#F0C96B'] },
+  { key:'midnight', label:'Mesnatë',       dots:['#1B2444','#5768B0','#C9A24A'] },
+  { key:'mono',     label:'Bardh e zi',    dots:['#1A1A1A','#4A4A4A','#B8975A'] },
+  { key:'sage',     label:'Sage (modern)', dots:['#4E6B52','#8CA889','#C9AD6C'] },
+  { key:'stone',    label:'Gur (bezhë)',   dots:['#6B5D49','#B09A77','#C9A869'] },
+  { key:'lavender', label:'Livando',       dots:['#55517A','#9389C4','#C9A869'] },
+  { key:'ice',      label:'Akull (blu e çelët)', dots:['#3C5A68','#6FA3B8','#C9A869'] }
+];
+let selectedNewTheme = 'teal';
+
+function renderThemeSwatches(containerId, selectedKey, onPick){
+  const box = document.getElementById(containerId);
+  box.innerHTML = THEME_CHOICES.map(t => `
+    <button type="button" class="theme-swatch ${t.key===selectedKey?'on':''}" data-theme-key="${t.key}">
+      <span class="dots">${t.dots.map(c=>`<span style="background:${c};"></span>`).join('')}</span>
+      <small>${t.label}</small>
+    </button>`).join('');
+  box.querySelectorAll('.theme-swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      box.querySelectorAll('.theme-swatch').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      onPick(btn.getAttribute('data-theme-key'));
+    });
+  });
+}
+
+function showToast(text, isError){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.style.background = isError ? '#C1592E' : '#0B1B33';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+async function unlock(){
+  apiBase = document.getElementById('backend-url').value.trim().replace(/\/$/, '');
+  superPassword = document.getElementById('super-password').value;
+  try{
+    const res = await fetch(apiBase + '/api/super-admin/hotels', { headers: { 'x-super-admin-password': superPassword } });
+    if(res.status === 401) throw new Error('wrong password');
+    if(!res.ok) throw new Error('bad response');
+    document.getElementById('conn-status').textContent = '● i lidhur';
+    document.getElementById('conn-status').classList.add('ok');
+    document.getElementById('locked-view').style.display = 'none';
+    document.getElementById('main-view').style.display = 'block';
+    renderThemeSwatches('new-theme-swatches', selectedNewTheme, (key) => { selectedNewTheme = key; });
+    loadHotels();
+    loadStats();
+  }catch(e){
+    showToast(e.message === 'wrong password' ? 'Fjalëkalim i gabuar.' : "S'u lidh dot me backend-in.", true);
+  }
+}
+
+let hotelCredsMap = {};
+
+async function loadHotels(){
+  try{
+    const res = await fetch(apiBase + '/api/super-admin/hotels', { headers: { 'x-super-admin-password': superPassword } });
+    const hotels = await res.json();
+    const box = document.getElementById('hotels-list');
+    if(hotels.length === 0){ box.innerHTML = '<p style="opacity:0.5; font-size:13px;">Ende pa hotele.</p>'; return; }
+    hotelCredsMap = {};
+    hotels.forEach(h => { hotelCredsMap[h.slug] = { admin: h.admin_password || '', staff: h.staff_password || '' }; });
+    box.innerHTML = hotels.map(h => `
+      <div class="hotel-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div class="hotel-name">${h.name} <span class="hotel-slug">(${h.slug})</span> ${h.active === false ? '<span style="color:#C1592E; font-size:11px; font-weight:500;">● Çaktivizuar</span>' : '<span style="color:#2C5FA8; font-size:11px; font-weight:500;">● Aktiv</span>'}</div>
+            <div class="hotel-urls">App: hotel-system.html?hotel=${h.slug} · Admin: admin.html?hotel=${h.slug} · Staf: staff-dashboard.html?hotel=${h.slug}</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; flex-shrink:0;">
+            <button class="del-link" style="color:#2C5FA8;" onclick="openAdminFor('${h.slug}')">Hap Admin</button>
+            <button class="del-link" style="color:${h.active === false ? '#2C5FA8' : '#CE9A42'};" onclick="toggleHotelActive('${h.slug}', ${h.active === false})">${h.active === false ? 'Aktivo' : 'Çaktivizo'}</button>
+            <button class="del-link" onclick="deleteHotel('${h.slug}')">Fshi</button>
+          </div>
+        </div>
+        <div style="font-size:12px; opacity:0.85; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span>🔑 Admin: <strong id="cred-admin-${h.slug}">${h.admin_password ? '••••••••' : '—'}</strong></span>
+          <span>👤 Staf: <strong id="cred-staff-${h.slug}">${h.staff_password ? '••••••••' : '—'}</strong></span>
+          <button type="button" class="del-link" style="color:#2C5FA8;" id="cred-toggle-${h.slug}" onclick="toggleCredVisibility('${h.slug}')">Shfaq fjalëkalimet</button>
+          <button type="button" class="del-link" style="color:#CE9A42;" onclick="resetHotelPassword('${h.slug}', 'admin')">Vendos fjalëkalim admin</button>
+          <button type="button" class="del-link" style="color:#CE9A42;" onclick="resetHotelPassword('${h.slug}', 'staff')">Vendos fjalëkalim staf</button>
+        </div>
+        <div class="theme-swatches" id="theme-swatches-${h.slug}"></div>
+      </div>`).join('');
+    hotels.forEach(h => {
+      renderThemeSwatches('theme-swatches-' + h.slug, h.theme || 'teal', (key) => setHotelTheme(h.slug, key));
+    });
+  }catch(e){ showToast('Gabim duke ngarkuar hotelet.', true); }
+}
+
+function toggleCredVisibility(slug){
+  const creds = hotelCredsMap[slug];
+  if(!creds) return;
+  const adminEl = document.getElementById('cred-admin-' + slug);
+  const staffEl = document.getElementById('cred-staff-' + slug);
+  const btn = document.getElementById('cred-toggle-' + slug);
+  const revealed = btn.textContent === 'Fshih fjalëkalimet';
+  if(revealed){
+    adminEl.textContent = creds.admin ? '••••••••' : '—';
+    staffEl.textContent = creds.staff ? '••••••••' : '—';
+    btn.textContent = 'Shfaq fjalëkalimet';
+  } else {
+    adminEl.textContent = creds.admin || '(i panjohur — vendos një të ri më poshtë)';
+    staffEl.textContent = creds.staff || '(i panjohur — vendos një të ri më poshtë)';
+    btn.textContent = 'Fshih fjalëkalimet';
+  }
+}
+
+// For a hotel created before credentials were saved in plain text, there's no
+// way to recover the original password (it was only ever stored hashed) —
+// the only option is to set a brand new one. This also works as a quick way
+// to reset a hotel's password without logging into its own admin panel.
+async function resetHotelPassword(slug, role){
+  const roleLabel = role === 'admin' ? 'admin-it' : 'staf-it';
+  const newPassword = prompt('Fjalëkalimi i ri për ' + roleLabel + ' të "' + slug + '" (min. 8 karaktere):');
+  if(newPassword === null) return;
+  if(newPassword.length < 8){
+    showToast('Fjalëkalimi duhet të ketë të paktën 8 karaktere.', true);
+    return;
+  }
+  try{
+    const res = await fetch(apiBase + '/api/auth/password?hotel=' + encodeURIComponent(slug), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': superPassword },
+      body: JSON.stringify({ role, newPassword })
+    });
+    if(!res.ok) throw new Error((await res.json())?.error || 'bad response');
+    if(!hotelCredsMap[slug]) hotelCredsMap[slug] = { admin: '', staff: '' };
+    hotelCredsMap[slug][role] = newPassword;
+    showToast('Fjalëkalimi u ndryshua.');
+  }catch(e){ showToast('Gabim: ' + (e.message || 'provo përsëri'), true); }
+}
+
+async function createHotel(){
+  const slug = document.getElementById('new-slug').value.trim().toLowerCase();
+  const name = document.getElementById('new-name').value.trim();
+  const adminPass = document.getElementById('new-admin-pass').value;
+  const staffPass = document.getElementById('new-staff-pass').value;
+  if(!slug || !name || !adminPass || !staffPass){
+    showToast('Plotëso të gjitha fushat.', true);
+    return;
+  }
+  try{
+    const res = await fetch(apiBase + '/api/super-admin/hotels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-super-admin-password': superPassword },
+      body: JSON.stringify({ slug, name, admin_password: adminPass, staff_password: staffPass, theme: selectedNewTheme })
+    });
+    if(!res.ok){
+      const err = await res.json();
+      throw new Error(err.error || 'Gabim');
+    }
+    showToast(`Hoteli "${name}" u krijua!`);
+    document.getElementById('new-slug').value = '';
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-admin-pass').value = '';
+    document.getElementById('new-staff-pass').value = '';
+    selectedNewTheme = 'teal';
+    renderThemeSwatches('new-theme-swatches', selectedNewTheme, (key) => { selectedNewTheme = key; });
+    loadHotels();
+  }catch(e){ showToast(e.message, true); }
+}
+
+async function setHotelTheme(slug, theme){
+  try{
+    await fetch(apiBase + '/api/super-admin/hotels/' + slug, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-super-admin-password': superPassword },
+      body: JSON.stringify({ theme })
+    });
+    showToast('Ngjyrat e ' + slug + ' u ndryshuan.');
+  }catch(e){ showToast('Gabim duke ndryshuar ngjyrat.', true); }
+}
+
+async function loadStats(){
+  try{
+    const res = await fetch(apiBase + '/api/super-admin/stats', { headers: { 'x-super-admin-password': superPassword } });
+    const stats = await res.json();
+    const box = document.getElementById('stats-table-box');
+    if(!box) return;
+    if(stats.length === 0){ box.innerHTML = '<p style="opacity:0.5; font-size:13px;">Ende pa hotele.</p>'; return; }
+    box.innerHTML = `<table class="stats-table">
+      <thead><tr>
+        <th>Hoteli</th><th>Probleme (24h)</th><th>Kërkesa (24h)</th><th>Pa trajtuar</th><th>Vonesa</th><th>Vlerësimi mesatar</th>
+      </tr></thead>
+      <tbody>
+        ${stats.map(s => `<tr>
+          <td>${s.name}</td>
+          <td class="num">${s.issues_24h}</td>
+          <td class="num">${s.requests_24h}</td>
+          <td class="num">${s.pending_count}</td>
+          <td class="num ${s.overdue_count > 0 ? 'overdue' : ''}">${s.overdue_count}</td>
+          <td class="num">${s.avg_rating !== null ? s.avg_rating + ' ★ (' + s.feedback_count + ')' : '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }catch(e){ console.warn('Could not load stats', e); }
+}
+
+async function exportStatsCsv(){
+  try{
+    const res = await fetch(apiBase + '/api/super-admin/stats/export', { headers: { 'x-super-admin-password': superPassword } });
+    if(!res.ok) throw new Error('bad response');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'statistika-hotelet.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){ showToast('Gabim duke eksportuar CSV.', true); }
+}
+
+async function deleteHotel(slug){
+  if(!confirm(`Fshi hotelin "${slug}" dhe TË GJITHË të dhënat e tij? Kjo s'kthehet mbrapa.`)) return;
+  try{
+    await fetch(apiBase + '/api/super-admin/hotels/' + slug, { method:'DELETE', headers: { 'x-super-admin-password': superPassword } });
+    showToast('Hoteli u fshi.');
+    loadHotels();
+  }catch(e){ showToast('Gabim duke fshirë.', true); }
+}
+
+function openAdminFor(slug){
+  const adminUrl = apiBase.includes('onrender.com')
+    ? window.location.href.replace(/super-admin\.html.*$/, 'admin.html')
+    : 'admin.html';
+  const url = adminUrl + '?hotel=' + encodeURIComponent(slug) + '&backend=' + encodeURIComponent(apiBase);
+  window.open(url, '_blank');
+  showToast('U hap admin.html — përdor fjalëkalimin SUPER ADMIN për të hyrë në këtë hotel.');
+}
+
+async function toggleHotelActive(slug, makeActive){
+  try{
+    await fetch(apiBase + '/api/super-admin/hotels/' + slug, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-super-admin-password': superPassword },
+      body: JSON.stringify({ active: makeActive })
+    });
+    showToast(makeActive ? 'Hoteli u aktivizua.' : 'Hoteli u çaktivizua — mysafirët s\'do të kenë qasje, por të dhënat mbeten të gjitha.');
+    loadHotels();
+  }catch(e){ showToast('Gabim duke ndryshuar statusin.', true); }
+}
+</script>
+</body>
+</html>
