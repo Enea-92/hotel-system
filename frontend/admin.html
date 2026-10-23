@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" id="fav-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Admin</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
@@ -559,6 +561,13 @@ function wireImageUpload(fileInputEl, targetUrlInputEl, onDone){
   });
 }
 
+function setHotelFavicon(slug){
+  try{
+    const u = apiBase + '/api/icon/' + encodeURIComponent(slug) + '/';
+    const f = document.getElementById('fav-icon'); if(f) f.href = u + '192.png';
+    const a = document.querySelector('link[rel="apple-touch-icon"]'); if(a) a.href = u + '180.png';
+  }catch(e){}
+}
 function apiUrl(path){
   const sep = path.includes('?') ? '&' : '?';
   return apiBase + path + sep + 'hotel=' + encodeURIComponent(currentHotel);
@@ -816,6 +825,7 @@ async function unlock(){
       const hotelName = info?.name || currentHotel;
       document.getElementById('panel-title').textContent = hotelName + ' — Admin';
       document.title = hotelName + ' — Admin';
+      setHotelFavicon(currentHotel);
       currentHotelTheme = info?.theme || 'teal';
       selectedAdminTheme = currentHotelTheme;
       renderThemeSwatches('admin-theme-swatches', currentHotelTheme, setAdminTheme);

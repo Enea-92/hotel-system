@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" id="fav-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Paneli i stafit</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
@@ -202,6 +204,13 @@ async function translateForStaff(text, fromLang){
   }
 }
 
+function setHotelFavicon(slug){
+  try{
+    const u = apiBase + '/api/icon/' + encodeURIComponent(slug) + '/';
+    const f = document.getElementById('fav-icon'); if(f) f.href = u + '192.png';
+    const a = document.querySelector('link[rel="apple-touch-icon"]'); if(a) a.href = u + '180.png';
+  }catch(e){}
+}
 function apiUrl(path){
   const sep = path.includes('?') ? '&' : '?';
   return apiBase + path + sep + 'hotel=' + encodeURIComponent(currentHotel);
@@ -308,6 +317,7 @@ async function connect(){
     const infoRes = await fetch(apiUrl('/api/hotel-info'));
     const info = await infoRes.json();
     hotelDisplayName = info?.name || currentHotel;
+      setHotelFavicon(currentHotel);
   }catch(e){ hotelDisplayName = currentHotel; }
   document.getElementById('panel-title').textContent = hotelDisplayName + ' — Paneli i stafit';
   updateTitleBadge();
@@ -410,7 +420,7 @@ async function loadStats(){
       <div class="stat-card"><div class="stat-num">${s.requests_today}</div><div class="stat-label">Kërkesa sot</div></div>
       <div class="stat-card"><div class="stat-num">${s.orders_today}</div><div class="stat-label">Porosi sot</div></div>
       <div class="stat-card"><div class="stat-num">${s.avg_rating ?? '—'}</div><div class="stat-label">Vlerësim mesatar</div></div>
-      <div class="stat-card"><div class="stat-num">${s.busiest_hour !== null ? s.busiest_hour+':00' : '—'}</div><div class="stat-label">Ora më e ngarkuar</div></div>
+      <div class="stat-card"><div class="stat-num">${Number.isInteger(s.busiest_hour) ? s.busiest_hour+':00' : '—'}</div><div class="stat-label">Ora më e ngarkuar</div></div>
     `;
   }catch(e){}
 }
