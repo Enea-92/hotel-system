@@ -1,6 +1,6 @@
 [
   {
-    "AllowedOrigins": ["https://hotelsystem-1.onrender.com"],
+    "AllowedOrigins": ["https://app.hotel-system.cc"],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
     "AllowedHeaders": ["*"],
     "ExposeHeaders": ["ETag"],

@@ -851,7 +851,7 @@ app.get('/api/hotel-info', requireHotel, async (req, res) => {
 // for the Home Screen icon label on iOS 16.4+) shows the guest's own hotel
 // name instead of always showing whichever hotel the shared static file was
 // last written for. STATIC_SITE_URL must be set to the static host's base
-// URL (e.g. https://hotelsystem-1.onrender.com) so the icon paths below
+// URL (e.g. https://app.hotel-system.cc) so the icon paths below
 // resolve correctly from this different origin.
 const STATIC_SITE_URL = (process.env.STATIC_SITE_URL || '').replace(/\/$/, '');
 // ============ DYNAMIC APP ICONS (initials of the hotel) ============

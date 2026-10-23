@@ -23,7 +23,7 @@
     let hotel = (params.get('hotel') || '').toLowerCase().trim();
     if(!hotel){ try{ hotel = (localStorage.getItem('bregu_hotel') || '').toLowerCase().trim(); }catch(e){} }
     if(!hotel) return;
-    const API_BASE_EARLY = "https://hotelsystem-lzlm.onrender.com";
+    const API_BASE_EARLY = "https://api.hotel-system.cc";
     const link = document.getElementById('manifest-link');
     if(link) link.href = API_BASE_EARLY + '/api/manifest?hotel=' + encodeURIComponent(hotel);
     const iconUrl = API_BASE_EARLY + '/api/icon/' + encodeURIComponent(hotel) + '/';
@@ -945,7 +945,7 @@ input, textarea, select{ font-size:16px !important; }
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
 // --- Live backend connection (Hotel Bregu API on Render) ---
-const API_BASE = "https://hotelsystem-lzlm.onrender.com";
+const API_BASE = "https://api.hotel-system.cc";
 let socket = null;
 // On iOS especially, installing the app to the Home Screen and then
 // backgrounding it (switching apps, locking the phone) suspends the page's
