@@ -271,6 +271,9 @@ p.section-sub{
   gap:10px;
   margin-bottom:20px;
 }
+.quick-card.wide{ grid-column:1 / -1; display:flex; align-items:center; gap:14px; border:1.5px solid var(--gold); }
+.quick-card.wide .qi{ margin:0; flex-shrink:0; }
+.quick-card.wide .qt, .quick-card.wide .qs{ margin:0; }
 .quick-card{
   background:var(--white);
   border:0.5px solid var(--line);
@@ -588,6 +591,11 @@ input, textarea, select{ font-size:16px !important; }
       </div>
 
       <div class="quick-grid">
+        <button class="quick-card wide" onclick="goOrderFood()">
+          <div class="qi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3v8a2 2 0 002 2v8M10 3v8M8 3v6M17 3c-2 1.5-3 4-3 7h3v11"/></svg></div>
+          <div><p class="qt" data-i18n="quick.order.title">Porosit nga bari dhe restoranti</p>
+          <p class="qs" data-i18n="quick.order.sub">Ushqim dhe pije të sjella në dhomë</p></div>
+        </button>
         <button class="quick-card" onclick="showView('room')">
           <div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg></div>
           <p class="qt" data-i18n="quick.room.title">Dhoma ime</p>
@@ -1030,6 +1038,7 @@ const translations = {
     "home.title":"Mirë se erdhët","home.subtitle":"Gjithçka që ju duhet gjatë qëndrimit, në një vend.",
     "keycard.wifi":"Wifi","keycard.pass":"Fjalëkalimi","keycard.copy":"Kopjo","keycard.copied":"U kopjua",
     "quick.room.title":"Dhoma ime","quick.room.sub":"Pajisje, kërkesa, shërbim në dhomë",
+    "quick.order.title":"Porosit nga bari dhe restoranti","quick.order.sub":"Ushqim dhe pije të sjella në dhomë",
     "quick.explore.title":"Zbulo zonën","quick.explore.sub":"Restorante, bare, plazhe, harta",
     "quick.info.title":"Info praktike","quick.info.sub":"Orare, transport, urgjenca, FAQ",
     "quick.chat.title":"Recepsioni","quick.chat.sub":"Shkruani direkt, përgjigjemi shpejt",
@@ -1110,6 +1119,7 @@ const translations = {
     "home.title":"Welcome","home.subtitle":"Everything you need during your stay, in one place.",
     "keycard.wifi":"Wifi","keycard.pass":"Password","keycard.copy":"Copy","keycard.copied":"Copied",
     "quick.room.title":"My room","quick.room.sub":"Amenities, requests, room service",
+    "quick.order.title":"Order from the bar and restaurant","quick.order.sub":"Food and drinks brought to your room",
     "quick.explore.title":"Explore the area","quick.explore.sub":"Restaurants, bars, beaches, map",
     "quick.info.title":"Practical info","quick.info.sub":"Hours, transport, emergency, FAQ",
     "quick.chat.title":"Front desk","quick.chat.sub":"Message us directly, we reply fast",
@@ -1190,6 +1200,7 @@ const translations = {
     "home.title":"Benvenuti","home.subtitle":"Tutto ciò che vi serve durante il soggiorno, in un unico posto.",
     "keycard.wifi":"Wifi","keycard.pass":"Password","keycard.copy":"Copia","keycard.copied":"Copiato",
     "quick.room.title":"La mia camera","quick.room.sub":"Servizi, richieste, room service",
+    "quick.order.title":"Ordina dal bar e dal ristorante","quick.order.sub":"Cibo e bevande portati in camera",
     "quick.explore.title":"Scopri la zona","quick.explore.sub":"Ristoranti, bar, spiagge, mappa",
     "quick.info.title":"Info pratiche","quick.info.sub":"Orari, trasporti, emergenze, FAQ",
     "quick.chat.title":"Reception","quick.chat.sub":"Scriveteci direttamente, rispondiamo in fretta",
@@ -1270,6 +1281,7 @@ const translations = {
     "home.title":"Willkommen","home.subtitle":"Alles, was Sie während Ihres Aufenthalts brauchen, an einem Ort.",
     "keycard.wifi":"WLAN","keycard.pass":"Passwort","keycard.copy":"Kopieren","keycard.copied":"Kopiert",
     "quick.room.title":"Mein Zimmer","quick.room.sub":"Ausstattung, Anfragen, Zimmerservice",
+    "quick.order.title":"Bei Bar und Restaurant bestellen","quick.order.sub":"Essen und Getränke aufs Zimmer",
     "quick.explore.title":"Umgebung entdecken","quick.explore.sub":"Restaurants, Bars, Strände, Karte",
     "quick.info.title":"Praktische Infos","quick.info.sub":"Zeiten, Transport, Notfälle, FAQ",
     "quick.chat.title":"Rezeption","quick.chat.sub":"Schreiben Sie uns direkt, wir antworten schnell",
@@ -1350,6 +1362,7 @@ const translations = {
     "home.title":"Bienvenue","home.subtitle":"Tout ce dont vous avez besoin pendant votre séjour, au même endroit.",
     "keycard.wifi":"Wifi","keycard.pass":"Mot de passe","keycard.copy":"Copier","keycard.copied":"Copié",
     "quick.room.title":"Ma chambre","quick.room.sub":"Équipements, demandes, service en chambre",
+    "quick.order.title":"Commander au bar et au restaurant","quick.order.sub":"Repas et boissons servis dans la chambre",
     "quick.explore.title":"Découvrir les environs","quick.explore.sub":"Restaurants, bars, plages, carte",
     "quick.info.title":"Infos pratiques","quick.info.sub":"Horaires, transport, urgences, FAQ",
     "quick.chat.title":"Réception","quick.chat.sub":"Écrivez-nous directement, nous répondons rapidement",
@@ -2981,6 +2994,11 @@ function toggleDnd(){
   apiPost('/api/quick-requests', { room_number: currentRoom, request_type: msg });
 }
 
+function goOrderFood(){
+  showView('room');
+  setTimeout(()=>{ const el = document.getElementById('section-roomservice'); if(el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }, 60);
+}
+
 function addRoomService(nameKey, price){
   rsCart.push({nameKey, price});
   renderCart();
@@ -2993,22 +3011,25 @@ function renderCart(){
     return;
   }
   let total = 0;
-  box.innerHTML = rsCart.map(item=>{
-    total += item.price;
-    // Items added from the hotel's own real menu (addRoomServiceFromContent)
-    // already carry a resolved `name` string — only the old built-in demo
-    // menu (addRoomService) uses a `nameKey` that needs translating. Without
-    // this fallback, every real hotel's cart showed "undefined" instead of
-    // the dish name, because translations[currentLang][undefined] is undefined.
+  const groups = new Map();
+  rsCart.forEach(item=>{
+    // Items from the hotel's real menu carry a resolved `name`; only the old
+    // built-in demo menu uses a `nameKey` that needs translating.
     const label = item.name || translations[currentLang][item.nameKey] || '';
-    return '<div class="rs-cart-line"><span>'+escapeHtml(label)+'</span><span>'+item.price+' L</span></div>';
-  }).join('') + '<div class="rs-cart-line" style="font-weight:500; border-top:0.5px solid var(--line); padding-top:8px; margin-top:4px;"><span>Total</span><span>'+total+' L</span></div>';
+    total += item.price;
+    const g = groups.get(label) || { label, price: item.price, qty: 0 };
+    g.qty++; groups.set(label, g);
+  });
+  box.innerHTML = [...groups.values()].map(g=>
+    '<div class="rs-cart-line"><span>'+escapeHtml(g.label)+(g.qty>1?' <b>x'+g.qty+'</b>':'')+'</span><span>'+(g.price*g.qty)+' L</span></div>'
+  ).join('') + '<div class="rs-cart-line" style="font-weight:500; border-top:0.5px solid var(--line); padding-top:8px; margin-top:4px;"><span>Total</span><span>'+total+' L</span></div>';
 }
 
 function sendRoomService(){
   if(rsCart.length === 0) return;
   const items = rsCart.map(item => ({ name: item.name || translations[currentLang][item.nameKey] || '', price: item.price }));
-  const lines = items.map(i => i.name).join(', ');
+  const counts = new Map(); items.forEach(i => counts.set(i.name, (counts.get(i.name)||0)+1));
+  const lines = [...counts].map(([n,q]) => q>1 ? n+' x'+q : n).join(', ');
   pushOutMsg((translations[currentLang]['roomservice.heading'])+': '+lines);
   showToast(translations[currentLang]['roomservice.sentToast']);
   rsCart = [];
