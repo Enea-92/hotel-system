@@ -323,6 +323,13 @@ p.section-sub{
 .amenity-note{ font-size:12.5px; color:var(--ink); opacity:0.6; margin:0; }
 
 .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.opt-row{ display:flex; align-items:center; justify-content:space-between; background:var(--white); border:0.5px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:8px; }
+.opt-name{ font-size:15px; font-weight:500; color:var(--ink); }
+.opt-step{ display:flex; align-items:center; gap:12px; }
+.opt-step button{ width:38px; height:38px; border-radius:50%; border:0.5px solid var(--sea); background:var(--white); color:var(--sea); font-size:22px; line-height:1; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; }
+.opt-step button:active{ transform:scale(0.92); background:var(--sand-dim); }
+.opt-step button:disabled{ opacity:0.3; }
+.opt-qty{ min-width:22px; text-align:center; font-family:'IBM Plex Mono', monospace; font-size:17px; font-weight:600; color:var(--ink); }
 .req-chip{
   border:0.5px solid var(--line);
   background:var(--white);
@@ -617,6 +624,7 @@ input, textarea, select{ font-size:16px !important; }
           <p class="qs" data-i18n="quick.chat.sub">Shkruani direkt, përgjigjemi shpejt</p>
         </button>
       </div>
+      <p class="copyright" style="text-align:center; font-size:11.5px; opacity:0.5; margin:6px 0 18px; color:var(--ink);">© <span class="cr-year">2026</span> Tech Solutions. Të gjitha të drejtat e rezervuara.</p>
     </div>
 
     <!-- ROOM -->
@@ -626,9 +634,9 @@ input, textarea, select{ font-size:16px !important; }
 
       <h3 class="group-heading" id="quick-requests-heading" data-i18n="quick.request.heading">Kërkesa të shpejta</h3>
       <div class="chip-row">
-        <button class="req-chip" data-section="quick_requests" data-i18n="req.towels" onclick="sendQuickRequest('req.towels')">Peshqirë shtesë</button>
+        <button class="req-chip" data-section="quick_requests" data-i18n="req.towels" onclick="openReqOptions('req.towels')">Peshqirë shtesë</button>
         <button class="req-chip" data-section="quick_requests" data-i18n="req.cleaning" onclick="sendQuickRequest('req.cleaning')">Pastrim dhome</button>
-        <button class="req-chip" data-section="quick_requests" data-i18n="req.pillows" onclick="sendQuickRequest('req.pillows')">Jastëkë shtesë</button>
+        <button class="req-chip" data-section="quick_requests" data-i18n="req.pillows" onclick="openReqOptions('req.pillows')">Jastëkë shtesë</button>
         <button class="req-chip" data-section="issues" data-i18n="req.issue_ac" onclick="reportIssue('req.issue_ac')">Klima s'punon</button>
         <button class="req-chip" data-section="issues" data-i18n="req.issue_tv" onclick="reportIssue('req.issue_tv')">TV s'punon</button>
         <button class="req-chip" data-section="issues" data-i18n="req.issue_toilet" onclick="reportIssue('req.issue_toilet')">Tualeti i prishur</button>
@@ -647,10 +655,10 @@ input, textarea, select{ font-size:16px !important; }
       <div id="section-toiletries">
       <h3 class="group-heading" data-i18n="quick.toiletries.heading">Artikuj higjienikë</h3>
       <div class="chip-row">
-        <button class="req-chip" data-i18n="req.shampoo" onclick="sendQuickRequest('req.shampoo')">Shampo</button>
-        <button class="req-chip" data-i18n="req.toothbrush" onclick="sendQuickRequest('req.toothbrush')">Brushë dhëmbësh</button>
-        <button class="req-chip" data-i18n="req.slippers" onclick="sendQuickRequest('req.slippers')">Pantofla</button>
-        <button class="req-chip" data-i18n="req.soap" onclick="sendQuickRequest('req.soap')">Sapun / xhel dushi</button>
+        <button class="req-chip" data-i18n="req.shampoo" onclick="openReqOptions('req.shampoo')">Shampo</button>
+        <button class="req-chip" data-i18n="req.toothbrush" onclick="openReqOptions('req.toothbrush')">Brushë dhëmbësh</button>
+        <button class="req-chip" data-i18n="req.slippers" onclick="openReqOptions('req.slippers')">Pantofla</button>
+        <button class="req-chip" data-i18n="req.soap" onclick="openReqOptions('req.soap')">Sapun / xhel dushi</button>
       </div>
       </div>
 
@@ -890,6 +898,15 @@ input, textarea, select{ font-size:16px !important; }
     <button type="button" id="rec-retake" onclick="recRetake()" style="display:none; flex:1; max-width:130px; background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:10px; padding:13px; font-size:14px; font-family:inherit; cursor:pointer;" data-i18n="issue.video.retake">Ribëj</button>
   </div>
 </div>
+<div id="req-opt-modal" onclick="if(event.target===this) closeReqOptions()" style="display:none; position:fixed; inset:0; background:rgba(10,15,14,0.55); z-index:9997; align-items:flex-end; justify-content:center;">
+  <div style="width:100%; max-width:460px; background:var(--sand); border-radius:18px 18px 0 0; padding:24px 22px calc(22px + env(safe-area-inset-bottom, 0px)); box-shadow:var(--shadow-2); animation:viewFadeIn 0.22s ease;">
+    <h3 id="req-opt-title" style="font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0 0 4px; color:var(--ink);"></h3>
+    <p style="font-size:13px; opacity:0.75; margin:0 0 14px; color:var(--ink);" data-i18n="opt.sub">Zgjidhni sasinë me + dhe −.</p>
+    <div id="req-opt-rows"></div>
+    <button type="button" id="req-opt-send" onclick="sendReqOptions()" style="width:100%; margin-top:14px; background:var(--sea); color:var(--on-sea); border:none; border-radius:10px; padding:13px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer;" data-i18n="opt.send">Dërgo kërkesën</button>
+    <button type="button" onclick="closeReqOptions()" style="width:100%; background:none; border:none; color:var(--ink); opacity:0.7; border-radius:10px; padding:11px; margin-top:4px; font-size:14px; font-family:inherit; cursor:pointer;" data-i18n="opt.cancel">Anulo</button>
+  </div>
+</div>
 <div id="issue-photo-modal" onclick="if(event.target===this) closeIssuePhotoModal()" style="display:none; position:fixed; inset:0; background:rgba(10,15,14,0.55); z-index:9998; align-items:flex-end; justify-content:center;">
   <div style="width:100%; max-width:460px; background:var(--sand); border-radius:18px 18px 0 0; padding:24px 22px calc(22px + env(safe-area-inset-bottom, 0px)); box-shadow:var(--shadow-2); animation:viewFadeIn 0.22s ease;">
     <div id="issue-photo-modal-preview" style="display:none; margin-bottom:14px;">
@@ -1039,6 +1056,7 @@ const translations = {
     "keycard.wifi":"Wifi","keycard.pass":"Fjalëkalimi","keycard.copy":"Kopjo","keycard.copied":"U kopjua",
     "quick.room.title":"Dhoma ime","quick.room.sub":"Pajisje, kërkesa, shërbim në dhomë",
     "quick.order.title":"Porosit nga bari dhe restoranti","quick.order.sub":"Ushqim dhe pije të sjella në dhomë",
+    "opt.title":"Çfarë ju duhet?","opt.sub":"Zgjidhni sasinë me + dhe −.","opt.send":"Dërgo kërkesën","opt.cancel":"Anulo","opt.bodyTowel":"Peshqir trupi","opt.faceTowel":"Peshqir fytyre",
     "quick.explore.title":"Zbulo zonën","quick.explore.sub":"Restorante, bare, plazhe, harta",
     "quick.info.title":"Info praktike","quick.info.sub":"Orare, transport, urgjenca, FAQ",
     "quick.chat.title":"Recepsioni","quick.chat.sub":"Shkruani direkt, përgjigjemi shpejt",
@@ -1120,6 +1138,7 @@ const translations = {
     "keycard.wifi":"Wifi","keycard.pass":"Password","keycard.copy":"Copy","keycard.copied":"Copied",
     "quick.room.title":"My room","quick.room.sub":"Amenities, requests, room service",
     "quick.order.title":"Order from the bar and restaurant","quick.order.sub":"Food and drinks brought to your room",
+    "opt.title":"What do you need?","opt.sub":"Choose the amount with + and −.","opt.send":"Send request","opt.cancel":"Cancel","opt.bodyTowel":"Body towel","opt.faceTowel":"Face towel",
     "quick.explore.title":"Explore the area","quick.explore.sub":"Restaurants, bars, beaches, map",
     "quick.info.title":"Practical info","quick.info.sub":"Hours, transport, emergency, FAQ",
     "quick.chat.title":"Front desk","quick.chat.sub":"Message us directly, we reply fast",
@@ -1201,6 +1220,7 @@ const translations = {
     "keycard.wifi":"Wifi","keycard.pass":"Password","keycard.copy":"Copia","keycard.copied":"Copiato",
     "quick.room.title":"La mia camera","quick.room.sub":"Servizi, richieste, room service",
     "quick.order.title":"Ordina dal bar e dal ristorante","quick.order.sub":"Cibo e bevande portati in camera",
+    "opt.title":"Di cosa ha bisogno?","opt.sub":"Scelga la quantità con + e −.","opt.send":"Invia richiesta","opt.cancel":"Annulla","opt.bodyTowel":"Asciugamano corpo","opt.faceTowel":"Asciugamano viso",
     "quick.explore.title":"Scopri la zona","quick.explore.sub":"Ristoranti, bar, spiagge, mappa",
     "quick.info.title":"Info pratiche","quick.info.sub":"Orari, trasporti, emergenze, FAQ",
     "quick.chat.title":"Reception","quick.chat.sub":"Scriveteci direttamente, rispondiamo in fretta",
@@ -1282,6 +1302,7 @@ const translations = {
     "keycard.wifi":"WLAN","keycard.pass":"Passwort","keycard.copy":"Kopieren","keycard.copied":"Kopiert",
     "quick.room.title":"Mein Zimmer","quick.room.sub":"Ausstattung, Anfragen, Zimmerservice",
     "quick.order.title":"Bei Bar und Restaurant bestellen","quick.order.sub":"Essen und Getränke aufs Zimmer",
+    "opt.title":"Was benötigen Sie?","opt.sub":"Wählen Sie die Menge mit + und −.","opt.send":"Anfrage senden","opt.cancel":"Abbrechen","opt.bodyTowel":"Badetuch","opt.faceTowel":"Gästetuch",
     "quick.explore.title":"Umgebung entdecken","quick.explore.sub":"Restaurants, Bars, Strände, Karte",
     "quick.info.title":"Praktische Infos","quick.info.sub":"Zeiten, Transport, Notfälle, FAQ",
     "quick.chat.title":"Rezeption","quick.chat.sub":"Schreiben Sie uns direkt, wir antworten schnell",
@@ -1363,6 +1384,7 @@ const translations = {
     "keycard.wifi":"Wifi","keycard.pass":"Mot de passe","keycard.copy":"Copier","keycard.copied":"Copié",
     "quick.room.title":"Ma chambre","quick.room.sub":"Équipements, demandes, service en chambre",
     "quick.order.title":"Commander au bar et au restaurant","quick.order.sub":"Repas et boissons servis dans la chambre",
+    "opt.title":"De quoi avez-vous besoin ?","opt.sub":"Choisissez la quantité avec + et −.","opt.send":"Envoyer la demande","opt.cancel":"Annuler","opt.bodyTowel":"Serviette de bain","opt.faceTowel":"Serviette visage",
     "quick.explore.title":"Découvrir les environs","quick.explore.sub":"Restaurants, bars, plages, carte",
     "quick.info.title":"Infos pratiques","quick.info.sub":"Horaires, transport, urgences, FAQ",
     "quick.chat.title":"Réception","quick.chat.sub":"Écrivez-nous directement, nous répondons rapidement",
@@ -2649,15 +2671,78 @@ function sendMsg(){
 let pendingIssuePhoto = null;
 let pendingIssueContext = null; // { key } for a predefined chip, or { text } for free-text issues
 
-function sendQuickRequest(key, category){
+function sendQuickRequest(key, category, customLabel){
   // Non-issue quick requests (towels, cleaning, pillows, toiletries...) send immediately.
   // Issue reports go through reportIssue() instead, so they can offer the photo/skip prompt.
-  const label = translations[currentLang][key];
+  const label = customLabel || translations[currentLang][key];
   const prefix = translations[currentLang]['req.sentPrefix'];
   pushOutMsg(prefix + ' ' + label);
   showToast(translations[currentLang]['req.confirmToast']);
   showView('chat');
   apiPost('/api/quick-requests', { room_number: currentRoom, request_type: label, category: category || 'request' });
+}
+
+
+// ---- Quick requests with options + quantity (+ / −) ----
+const REQ_OPTIONS = {
+  'req.towels':    ['opt.bodyTowel', 'opt.faceTowel'],
+  'req.pillows':   ['req.pillows'],
+  'req.shampoo':   ['req.shampoo'],
+  'req.toothbrush':['req.toothbrush'],
+  'req.slippers':  ['req.slippers'],
+  'req.soap':      ['req.soap']
+};
+const REQ_OPT_MAX = 6;
+let reqOpt = null; // { key, rows:[labelKey], qty:[n] }
+
+function openReqOptions(key){
+  const rows = REQ_OPTIONS[key];
+  if(!rows){ sendQuickRequest(key); return; }
+  reqOpt = { key, rows, qty: rows.map((_, i) => i === 0 ? 1 : 0) };
+  document.getElementById('req-opt-title').textContent = translations[currentLang][key] || '';
+  renderReqOptions();
+  document.getElementById('req-opt-modal').style.display = 'flex';
+}
+function closeReqOptions(){
+  document.getElementById('req-opt-modal').style.display = 'none';
+  reqOpt = null;
+}
+function renderReqOptions(){
+  if(!reqOpt) return;
+  const box = document.getElementById('req-opt-rows');
+  box.innerHTML = reqOpt.rows.map((k, i) => `
+    <div class="opt-row">
+      <span class="opt-name">${escapeHtml(translations[currentLang][k] || '')}</span>
+      <span class="opt-step">
+        <button type="button" onclick="changeReqQty(${i},-1)" aria-label="−" ${reqOpt.qty[i] <= 0 ? 'disabled' : ''}>−</button>
+        <span class="opt-qty">${reqOpt.qty[i]}</span>
+        <button type="button" onclick="changeReqQty(${i},1)" aria-label="+" ${reqOpt.qty[i] >= REQ_OPT_MAX ? 'disabled' : ''}>+</button>
+      </span>
+    </div>`).join('');
+  const total = reqOpt.qty.reduce((a, b) => a + b, 0);
+  const btn = document.getElementById('req-opt-send');
+  btn.disabled = total === 0;
+  btn.style.opacity = total === 0 ? '0.4' : '1';
+}
+function changeReqQty(i, d){
+  if(!reqOpt) return;
+  reqOpt.qty[i] = Math.max(0, Math.min(REQ_OPT_MAX, reqOpt.qty[i] + d));
+  renderReqOptions();
+}
+function reqOptionsText(){
+  const t = translations[currentLang];
+  if(reqOpt.rows.length === 1){
+    const q = reqOpt.qty[0];
+    return t[reqOpt.key] + (q > 1 ? ' x' + q : '');
+  }
+  const parts = reqOpt.rows.map((k, i) => reqOpt.qty[i] > 0 ? t[k] + ' x' + reqOpt.qty[i] : null).filter(Boolean);
+  return t[reqOpt.key] + ': ' + parts.join(', ');
+}
+function sendReqOptions(){
+  if(!reqOpt || reqOpt.qty.reduce((a, b) => a + b, 0) === 0) return;
+  const text = reqOptionsText();
+  closeReqOptions();
+  sendQuickRequest('', 'request', text);
 }
 
 function reportIssue(key){
@@ -3096,5 +3181,6 @@ function submitFeedback(){
 }
 </script>
 
+<script>try{document.querySelectorAll('.cr-year').forEach(function(e){e.textContent=new Date().getFullYear()})}catch(e){}</script>
 </body>
 </html>
