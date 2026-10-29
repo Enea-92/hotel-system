@@ -195,6 +195,7 @@ function verifySessionToken(token) {
 // NOTE: keys are derived from SESSION_SECRET — changing that secret later
 // invalidates every printed QR code, so set it once and keep it.
 const REQUIRE_GUEST_AUTH = process.env.REQUIRE_GUEST_AUTH !== 'false';
+const ACCEPT_ROOM_KEY = process.env.ACCEPT_ROOM_KEY === 'true';
 
 function roomKey(hotel, room) {
   return base64url(crypto.createHmac('sha256', SESSION_SECRET).update('room-key:' + hotel + ':' + room).digest()).slice(0, 24);
@@ -210,7 +211,11 @@ function guestHasAccess(hotel, room, token, key) {
     const payload = verifySessionToken(token);
     if (payload && String(payload.hotel) === String(hotel) && String(payload.room) === String(room)) return true;
   }
-  if (key && safeEqualStr(key, roomKey(hotel, room))) return true;
+  // The permanent QR key alone no longer opens anything: it can only be traded
+  // for a session token (POST /api/session/start) that expires at the next
+  // 11:00 Europe/Tirane. Set ACCEPT_ROOM_KEY=true only as a temporary bridge
+  // for guests still running an old cached version of the app.
+  if (ACCEPT_ROOM_KEY && key && safeEqualStr(key, roomKey(hotel, room))) return true;
   return false;
 }
 
@@ -765,7 +770,7 @@ app.patch('/api/room-service/:id', requireStaff, async (req, res) => {
 
 
 // ============ STATS (admin) ============
-app.get('/api/stats', requireAdmin, async (req, res) => {
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
   const since = new Date(Date.now() - days * 86400000);
   const [reqByType, ordersCount, orderRevenue, fb, issues] = await Promise.all([
@@ -1198,7 +1203,8 @@ app.get('/api/export/orders.csv', requireStaff, async (req, res) => {
   const docs = await RoomServiceOrder.find({ hotel: req.hotel }).sort({ created_at: -1 });
   const rows = docs.map(d => {
     const dto = toDTO(d);
-    return { ...dto, items: dto.items.map(i => i.name).join(' | ') };
+    const counts = new Map(); dto.items.forEach(i => counts.set(i.name, (counts.get(i.name) || 0) + 1));
+    return { ...dto, items: [...counts].map(([n, q]) => q > 1 ? n + ' x' + q : n).join(' | ') };
   });
   const csv = toCsv(rows, ['id', 'room_number', 'items', 'total', 'status', 'created_at']);
   res.setHeader('Content-Type', 'text/csv');
@@ -1270,6 +1276,31 @@ app.post('/api/room-keys', requireAdmin, (req, res) => {
 app.delete('/api/qr-codes/:room', requireAdmin, async (req, res) => {
   await GeneratedQr.deleteOne({ hotel: req.hotel, room_number: req.params.room });
   res.json({ deleted: true });
+});
+
+// A guest's QR scan trades the room key for a session token that is valid until
+// the next 11:00 (Europe/Tirane) — the same moment the day's chat is wiped.
+// After that the guest has to scan the QR again.
+function nextHotelDayEnd(now = new Date()) {
+  const last = lastWipeCutoff(now).date.getTime();
+  return lastWipeCutoff(new Date(last + 26 * 3600 * 1000)).date.getTime();
+}
+const sessionStartLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => 'ip:' + ipKeyGenerator(req.ip),
+  message: { error: 'Shumë përpjekje, provo përsëri pas pak.' }
+});
+app.post('/api/session/start', sessionStartLimiter, requireHotel, (req, res) => {
+  const room = String((req.body && req.body.room) || '').trim();
+  const key = String((req.body && req.body.key) || '');
+  const floor = req.body && req.body.floor ? String(req.body.floor).slice(0, 10) : '';
+  if (!room || room.length > 20) return res.status(400).json({ error: 'room required' });
+  if (REQUIRE_GUEST_AUTH && !safeEqualStr(key, roomKey(req.hotel, room))) {
+    return res.status(401).json({ error: 'Kodi QR nuk është i vlefshëm.' });
+  }
+  const exp = nextHotelDayEnd();
+  const token = signSessionToken({ hotel: req.hotel, room, floor, exp });
+  res.json({ token, exp, room, floor });
 });
 
 app.post('/api/session/issue', requireStaff, (req, res) => {

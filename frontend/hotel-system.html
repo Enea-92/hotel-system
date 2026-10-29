@@ -2165,21 +2165,46 @@ async function initFromUrl(){
       }
     }catch(e){ console.warn('Session verification failed', e); }
   } else if(urlRoom){
-    // Standard QR code link — the code itself never expires, but each scan
-    // is only valid for the current hotel day (until the next 11:00 wipe).
+    // Standard QR code link. A scan trades the room key for a session token
+    // that the server ends at the next 11:00 (Europe/Tirane); after that the
+    // guest has to scan the QR again.
     currentRoom = urlRoom;
     currentFloor = urlFloor || currentFloor;
     roomKey = urlKey || '';
-    if(!roomKey){
-      // A link without a key (e.g. an old printed QR) can still reuse the key
-      // this device saved from an earlier proper scan of the same room.
+    if(roomKey){
+      let started = false;
+      try{
+        const res = await fetch(API_BASE + '/api/session/start', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hotel: currentHotel, room: currentRoom, key: roomKey, floor: currentFloor })
+        });
+        if(res.ok){
+          const data = await res.json();
+          sessionToken = data.token; roomKey = '';
+          try{ localStorage.setItem('bregu_session', JSON.stringify({ token: data.token, room: currentRoom, floor: currentFloor, exp: data.exp })); }catch(e){}
+          started = true; sessionValid = true;
+          // Keep the permanent key out of the address bar / history / home-screen shortcut.
+          try{ const u = new URL(window.location.href); u.searchParams.delete('k'); history.replaceState(null, '', u.toString()); }catch(e){}
+        } else if(res.status === 401 || res.status === 400){
+          started = true; sessionValid = false; roomKey = '';
+        }
+      }catch(e){ /* offline or an older server without /api/session/start: fall back below */ }
+      if(!started){
+        // Older server: keep the previous behaviour (key sent directly, valid for the current hotel day).
+        try{ localStorage.setItem('bregu_session', JSON.stringify({ room: currentRoom, floor: currentFloor, hotelDay: getHotelDay(), key: roomKey })); }catch(e){}
+        sessionValid = true;
+      }
+    } else {
+      // Link without a key (e.g. the home-screen shortcut): reuse today's session for this room.
       try{
         const prev = JSON.parse(localStorage.getItem('bregu_session') || 'null');
-        if(prev && prev.key && String(prev.room) === String(urlRoom)) roomKey = prev.key;
+        if(prev && prev.token && prev.exp && Date.now() < prev.exp && String(prev.room) === String(urlRoom)){
+          sessionToken = prev.token; sessionValid = true;
+        } else if(prev && prev.key && !prev.token && prev.hotelDay === getHotelDay() && String(prev.room) === String(urlRoom)){
+          roomKey = prev.key; sessionValid = true; // legacy saved key, same hotel day only
+        }
       }catch(e){}
     }
-    try{ localStorage.setItem('bregu_session', JSON.stringify({ room: currentRoom, floor: currentFloor, hotelDay: getHotelDay(), key: roomKey })); }catch(e){}
-    sessionValid = true;
   } else {
     try{
       const stored = JSON.parse(localStorage.getItem('bregu_session') || 'null');
