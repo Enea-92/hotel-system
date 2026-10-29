@@ -783,7 +783,7 @@ async function loadStats(){
   if(!box) return;
   try{
     const days = document.getElementById('stats-days').value;
-    const res = await fetch(apiUrl('/api/stats') + '&days=' + days, { headers: { 'x-admin-password': adminPassword } });
+    const res = await fetch(apiUrl('/api/admin/stats') + '&days=' + days, { headers: { 'x-admin-password': adminPassword } });
     if(!res.ok) throw new Error(res.status);
     const d = await res.json();
     const esc = (t) => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -856,7 +856,7 @@ async function unlock(){
 }
 
 const SECTION_LABELS = {
-  amenities: 'Pajisjet e dhomës', locations: 'Ku ndodhet (drejtime)', room_service: 'Shërbimi në dhomë',
+  amenities: 'Pajisjet e dhomës', locations: 'Ku ndodhet (drejtime)', room_service: 'Porosit ushqim/pije (restorant/bar)',
   quick_requests: 'Kërkesa të shpejta (peshqirë, pastrim, jastëkë)', toiletries: 'Artikuj higjienikë',
   dnd: 'Mos shqetësoni', issues: 'Raportim problemesh (klimë/TV/hidraulik)',
   restaurants: 'Rekomandime — Restorante', bars: 'Rekomandime — Bare', beaches: 'Rekomandime — Plazhe',

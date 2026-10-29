@@ -598,7 +598,7 @@ input, textarea, select{ font-size:16px !important; }
       </div>
 
       <div class="quick-grid">
-        <button class="quick-card wide" onclick="goOrderFood()">
+        <button class="quick-card wide" id="home-order-tile" onclick="goOrderFood()">
           <div class="qi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3v8a2 2 0 002 2v8M10 3v8M8 3v6M17 3c-2 1.5-3 4-3 7h3v11"/></svg></div>
           <div><p class="qt" data-i18n="quick.order.title">Porosit nga bari dhe restoranti</p>
           <p class="qs" data-i18n="quick.order.sub">Ushqim dhe pije të sjella në dhomë</p></div>
@@ -1792,6 +1792,9 @@ function applyEnabledSections(sections){
     const el = document.getElementById(wrapperMap[key]);
     if(el) el.style.display = (sections[key] === false) ? 'none' : '';
   });
+
+  const orderTile = document.getElementById('home-order-tile');
+  if(orderTile) orderTile.style.display = (sections.room_service === false) ? 'none' : '';
 
   document.querySelectorAll('[data-section="quick_requests"]').forEach(el => {
     el.style.display = (sections.quick_requests === false) ? 'none' : '';
